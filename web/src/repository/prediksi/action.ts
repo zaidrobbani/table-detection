@@ -2,6 +2,7 @@ import type { AxiosResponse } from "axios";
 import { axiosPublic } from "@/lib/axios";
 import { isMockApi } from "@/lib/env";
 import { tryCatch } from "@/lib/try-catch";
+import { siapkanUnggahan } from "@/shared/util/image";
 import type {
   CompareResult,
   HealthResponse,
@@ -33,7 +34,9 @@ export const PostPredict = async ({
 }: PostPredictPayload): Promise<PredictResult> => {
   if (isMockApi()) return mockPredict(file, model);
   const form = new FormData();
-  form.append("file", file, namaBerkas(file));
+  // Jaring pengaman: body Vercel Functions maksimal 4,5 MB.
+  const siap = await siapkanUnggahan(file);
+  form.append("file", siap, namaBerkas(file));
   form.append("model", model);
   return ambil(axiosPublic.post<PredictResult>("/predict", form));
 };
@@ -43,6 +46,7 @@ export const PostCompare = async ({
 }: PostComparePayload): Promise<CompareResult> => {
   if (isMockApi()) return mockCompare(file);
   const form = new FormData();
-  form.append("file", file, namaBerkas(file));
+  const siap = await siapkanUnggahan(file);
+  form.append("file", siap, namaBerkas(file));
   return ambil(axiosPublic.post<CompareResult>("/compare", form));
 };

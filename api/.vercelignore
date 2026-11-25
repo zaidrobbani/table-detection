@@ -1,0 +1,14 @@
+# Dikecualikan dari bundel Vercel (Root Directory = api).
+# Tetap ikut: app/, index.py, models/*.onnx, models/*.npz, models/preprocessing_config.json.
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+tests
+scripts
+*.keras
+Dockerfile
+.dockerignore
+requirements-dev.txt
+pytest.ini
+README.md

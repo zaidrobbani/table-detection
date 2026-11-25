@@ -72,7 +72,9 @@ const detailCode = (detail: ApiErrorResponse["detail"]) => {
 
 const fallbackMessageByStatus = (status?: number) => {
   if (status === 400) return "Berkas bukan gambar yang valid atau rusak.";
-  if (status === 413) return "Ukuran foto melebihi batas 10 MB.";
+  // Respons 413 dari Vercel (FUNCTION_PAYLOAD_TOO_LARGE) bukan JSON, jadi pesannya dari sini.
+  if (status === 413)
+    return "Ukuran foto melebihi batas unggah server (sekitar 4 MB). Pakai foto yang lebih kecil.";
   if (status === 415)
     return "Tipe berkas tidak didukung. Gunakan JPEG, PNG, WEBP, atau HEIC.";
   if (status === 422)

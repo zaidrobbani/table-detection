@@ -109,3 +109,28 @@ def test_upload_tidak_ditulis_ke_disk():
     from app.core.config import get_settings
 
     assert MultiPartParser.spool_max_size > get_settings().max_upload_bytes
+
+
+def test_muat_lazy_tanpa_lifespan(foto_bytes):
+    """Tanpa lifespan (serverless), /health dan /compare memuat model sendiri."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+    from app.services.model_registry import dapatkan_registry
+
+    app = create_app()
+    assert app.state.registry is None
+    c = TestClient(app)  # tanpa `with` -> lifespan tidak berjalan
+    j = c.get("/health").json()
+    assert j["warm"] is True and j["models"] == ["B", "C"]
+    reg = app.state.registry
+    assert reg is not None
+    with ThreadPoolExecutor(4) as ex:  # registry dimuat sekali saja
+        assert all(r is reg for r in ex.map(lambda _: dapatkan_registry(app), range(8)))
+
+    app2 = create_app()
+    c2 = TestClient(app2)
+    r = _kirim(c2, "/compare", foto_bytes[NAMA[0]], NAMA[0], "image/jpeg")
+    assert r.status_code == 200 and app2.state.registry is not None

@@ -1,4 +1,5 @@
-import { MAX_UPLOAD_BYTES } from "@/schemas/prediksi/upload.schema";
+import { MAX_KIRIM_BYTES } from "@/schemas/prediksi/upload.schema";
+import { bukaGambar, canvasKeBlob } from "@/shared/util/image";
 
 /** Area crop dalam piksel gambar asli (sama dengan Area react-easy-crop). */
 export interface AreaCrop {
@@ -10,66 +11,18 @@ export interface AreaCrop {
 
 /**
  * Batas sisi terpanjang hasil crop. Aman karena model tetap di-resize ke 224.
- * Bila PNG masih melebihi batas upload, turun ke ukuran berikutnya.
+ * Bila hasil masih melebihi batas kirim (4 MB), turun ke ukuran berikutnya.
  */
 const BATAS_SISI = [2048, 1600, 1200, 900] as const;
 
-interface GambarTerbuka {
-  sumber: CanvasImageSource;
-  lebar: number;
-  tinggi: number;
-  tutup: () => void;
-}
-
-/** Buka gambar dengan orientasi EXIF sudah diterapkan. */
-async function bukaGambar(file: Blob): Promise<GambarTerbuka> {
-  try {
-    const bitmap = await createImageBitmap(file, {
-      imageOrientation: "from-image",
-    });
-    return {
-      sumber: bitmap,
-      lebar: bitmap.width,
-      tinggi: bitmap.height,
-      tutup: () => bitmap.close(),
-    };
-  } catch {
-    // Cadangan: <img> (browser modern menerapkan EXIF sendiri).
-    const url = URL.createObjectURL(file);
-    try {
-      const img = new Image();
-      img.src = url;
-      await img.decode();
-      return {
-        sumber: img,
-        lebar: img.naturalWidth,
-        tinggi: img.naturalHeight,
-        tutup: () => URL.revokeObjectURL(url),
-      };
-    } catch {
-      URL.revokeObjectURL(url);
-      throw new Error(
-        "Foto tidak bisa dibaca browser. Coba format JPEG, PNG, atau WEBP.",
-      );
-    }
-  }
-}
-
-const keBlobPng = (canvas: HTMLCanvasElement) =>
-  new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) =>
-        blob
-          ? resolve(blob)
-          : reject(new Error("Gagal membuat gambar hasil potongan.")),
-      "image/png",
-    );
-  });
+/** Kualitas JPEG cadangan bila PNG melebihi batas kirim. */
+const KUALITAS_JPEG = 0.95;
 
 /**
- * Potong `file` ke `area` (piksel gambar asli; null = seluruh gambar) dan
- * kembalikan PNG. Sisi terpanjang dibatasi 2048 px (lalu 1600 px bila hasil
- * masih lebih dari 10 MB).
+ * Potong `file` ke `area` (piksel gambar asli; null = seluruh gambar).
+ * Hasil PNG (tanpa kehilangan) dengan sisi terpanjang <= 2048 px. Bila PNG
+ * lebih dari 4 MB (batas body Vercel), ukuran piksel yang sama dicoba sebagai
+ * JPEG 0,95 sebelum sisi diperkecil ke 1600/1200/900 px.
  */
 export async function cropKeBlob(
   file: Blob,
@@ -111,8 +64,10 @@ export async function cropKeBlob(
         canvas.width,
         canvas.height,
       );
-      terakhir = await keBlobPng(canvas);
-      if (terakhir.size <= MAX_UPLOAD_BYTES) return terakhir;
+      terakhir = await canvasKeBlob(canvas, "image/png");
+      if (terakhir.size <= MAX_KIRIM_BYTES) return terakhir;
+      terakhir = await canvasKeBlob(canvas, "image/jpeg", KUALITAS_JPEG);
+      if (terakhir.size <= MAX_KIRIM_BYTES) return terakhir;
     }
     return terakhir as Blob;
   } finally {

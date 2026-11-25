@@ -9,7 +9,11 @@ import {
   hapusFotoBandingkan,
   simpanFotoBandingkan,
 } from "@/shared/util/foto-bandingkan";
-import { dataUrlToFile, fileToDataUrl } from "@/shared/util/image";
+import {
+  dataUrlToFile,
+  fileToDataUrl,
+  siapkanUnggahan,
+} from "@/shared/util/image";
 import { FOTO } from "../data";
 
 const namaBerkas = (dataUrl: string) => {
@@ -39,11 +43,16 @@ export const useBandingkanModelContainer = () => {
 
   const terimaFile = useCallback(async (file: File) => {
     try {
-      const url = await fileToDataUrl(file);
+      // Perkecil dulu bila > 4 MB (batas body Vercel) sebelum dikirim/disimpan.
+      const url = await fileToDataUrl(await siapkanUnggahan(file));
       simpanFotoBandingkan(url);
       setFoto(url);
-    } catch {
-      toast.error("Foto gagal dibaca. Coba foto lain.");
+    } catch (e) {
+      toast.error(
+        e instanceof Error && e.message
+          ? e.message
+          : "Foto gagal dibaca. Coba foto lain.",
+      );
     }
   }, []);
 

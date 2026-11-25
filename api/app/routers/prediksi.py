@@ -11,6 +11,7 @@ from app.core.errors import ApiError
 from app.core.ratelimit import batasi_laju
 from app.schemas.prediksi import CompareResult, PredictResult
 from app.services.inference import jalankan
+from app.services.model_registry import dapatkan_registry
 from app.services.preprocess import load_rgb
 
 pillow_heif.register_heif_opener()
@@ -47,18 +48,14 @@ async def predict(
     model: Annotated[Literal["B", "C"], Form()] = "C",
 ):
     rgb = await _baca_gambar(file)
-    reg = request.app.state.registry
-    if reg is None:
-        raise ApiError(503, "Model sedang dimuat. Coba lagi sebentar lagi.")
+    reg = await run_in_threadpool(dapatkan_registry, request.app)
     return await run_in_threadpool(jalankan, reg, model, rgb)
 
 
 @router.post("/compare", response_model=CompareResult)
 async def compare(request: Request, file: Annotated[UploadFile, File()]):
     rgb = await _baca_gambar(file)
-    reg = request.app.state.registry
-    if reg is None:
-        raise ApiError(503, "Model sedang dimuat. Coba lagi sebentar lagi.")
+    reg = await run_in_threadpool(dapatkan_registry, request.app)
     b = await run_in_threadpool(jalankan, reg, "B", rgb)
     c = await run_in_threadpool(jalankan, reg, "C", rgb)
     return CompareResult(B=b, C=c, sepakat=b.label == c.label)

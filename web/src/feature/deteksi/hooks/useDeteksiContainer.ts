@@ -5,12 +5,11 @@ import type { Area } from "react-easy-crop";
 import { toast } from "sonner";
 import type { ModelId, PredictResult } from "@/repository/prediksi/dto";
 import { usePredict } from "@/repository/prediksi/query";
-import { MAX_UPLOAD_BYTES } from "@/schemas/prediksi/upload.schema";
 import {
   hapusFotoBandingkan,
   simpanFotoBandingkan,
 } from "@/shared/util/foto-bandingkan";
-import { fileToDataUrl } from "@/shared/util/image";
+import { fileToDataUrl, siapkanUnggahan } from "@/shared/util/image";
 import {
   CROP,
   HASIL,
@@ -122,8 +121,14 @@ export const useDeteksiContainer = () => {
   const terimaFile = useCallback(
     async (file: File) => {
       if (isHeic(file) && !(await bisaDitampilkan(file))) {
-        toast.info(CROP.heicLewati);
-        mulaiAnalisis(file);
+        try {
+          // HEIC > 4 MB yang tak bisa didekode browser ditolak dengan pesan ramah.
+          const siap = await siapkanUnggahan(file);
+          toast.info(CROP.heicLewati);
+          mulaiAnalisis(siap);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : CROP.gagalProses);
+        }
         return;
       }
       setFileAsli(file);
@@ -171,16 +176,12 @@ export const useDeteksiContainer = () => {
     [fileAsli, mulaiAnalisis],
   );
 
-  /** Kirim foto asli apa adanya, kecuali melebihi 10 MB. */
+  /** Kirim foto asli apa adanya, kecuali melebihi 4 MB (lalu diperkecil). */
   const lewatiCrop = useCallback(async () => {
     if (!fileAsli) return;
-    if (fileAsli.size <= MAX_UPLOAD_BYTES) {
-      mulaiAnalisis(fileAsli);
-      return;
-    }
     setSibukCrop(true);
     try {
-      mulaiAnalisis(await cropKeBlob(fileAsli, null));
+      mulaiAnalisis(await siapkanUnggahan(fileAsli));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : CROP.gagalProses);
     } finally {

@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import onnxruntime as ort
 
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
 
 log = logging.getLogger("meja-bersih")
 
@@ -93,3 +93,28 @@ def warmup(reg: Registry) -> None:
     for model in reg.models.values():
         prediksi_dan_cam(model, dummy)
     reg.warm = True
+
+
+_kunci_muat = threading.Lock()
+
+
+def dapatkan_registry(app) -> Registry:
+    """Kembalikan registry model; muat sekali (thread-safe) bila belum ada.
+
+    Di runtime serverless (Vercel) lifespan bisa tidak berjalan, jadi router
+    memanggil fungsi ini alih-alih membaca app.state.registry secara langsung.
+    Fungsi ini memblokir selama pemuatan pertama, jadi panggil lewat threadpool.
+    Registry baru dipasang setelah warmup selesai, sehingga pemanggil lain tidak
+    pernah melihat registry setengah jadi.
+    """
+    reg = getattr(app.state, "registry", None)
+    if reg is not None:
+        return reg
+    with _kunci_muat:
+        reg = getattr(app.state, "registry", None)
+        if reg is None:
+            reg = muat_registry(get_settings())
+            warmup(reg)
+            app.state.registry = reg
+            log.info("Model dimuat secara lazy (warm).")
+    return reg

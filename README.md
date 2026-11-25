@@ -15,9 +15,9 @@ Dua model MobileNetV2 (backbone beku) dibandingkan dengan protokol yang sama:
 ## Isi monorepo
 
 ```
-api/   FastAPI + ONNX Runtime (Render free tier; lokal port 7860)
+api/   FastAPI + ONNX Runtime (Vercel Python Function; alternatif Render; lokal port 7860)
 web/   Next.js 16 App Router + Tailwind v4 + bun (Vercel, Root Directory = web)
-render.yaml Blueprint Render untuk api/
+render.yaml Blueprint Render untuk api/ (alternatif)
 dev.sh menjalankan api + web sekaligus untuk pengembangan lokal
 ```
 
@@ -135,10 +135,29 @@ nama berkas.
 
 ## Deploy
 
-### API ke Render (free tier)
+### API ke Vercel (proyek kedua)
+
+Render dan Hugging Face Space butuh kartu/akun PRO, jadi API dijalankan sebagai Vercel Python
+Function di proyek Vercel terpisah dari web. Tanpa `vercel.json`: Vercel mendeteksi FastAPI dari
+`api/requirements.txt` dan memuat `app` dari `api/index.py`.
+
+1. Vercel > Add New > Project > pilih repo ini, set **Root Directory** ke `api`
+   (Framework Preset FastAPI terdeteksi otomatis). Python 3.12 dari `api/.python-version`.
+2. Environment Variables (Production dan Preview):
+   - `ALLOWED_ORIGINS` = domain proyek web, mis. `https://meja-bersih-pcd.vercel.app,http://localhost:3000`
+   - `ALLOWED_ORIGIN_REGEX` = mis. `https://meja-bersih-[a-z0-9-]+-zaidrobbanis-projects\.vercel\.app`
+3. Setelah deploy, cek `https://<proyek-api>.vercel.app/health` (panggilan pertama memuat model, beberapa detik).
+4. Di proyek web, set `NEXT_PUBLIC_BASE_API_URL` ke URL proyek API, lalu redeploy web.
+
+Batas body request Vercel Functions 4,5 MB, jadi web memperkecil foto > 4 MB di browser
+(sisi terpanjang 2048 px, JPEG 0,92) sebelum mengirim; foto <= 4 MB dikirim apa adanya.
+Model dimuat lazy (thread-safe) pada panggilan pertama tiap instance. Rate limit bersifat per instance.
+Detail ada di `api/README.md`.
+
+### API ke Render (alternatif, free tier)
 
 API berjalan di ONNX Runtime (tanpa TensorFlow) supaya muat di RAM 512 MB.
-Hugging Face Space dengan Docker ternyata butuh akun PRO, jadi hosting memakai Render.
+Hugging Face Space dengan Docker butuh akun PRO; Render free tier dipakai sebagai alternatif bila tidak memakai Vercel.
 
 1. Di Render: New > **Blueprint**, pilih repo GitHub ini. `render.yaml` di root
    membuat service `meja-bersih-api` (Python 3.11, plan free, region Singapore,
@@ -163,10 +182,10 @@ Cek `warm` di `/health`. Detail ekspor ulang ONNX ada di `api/README.md`.
    Framework terdeteksi Next.js; `web/vercel.json` memakai
    `bun install --ignore-scripts` sebagai install command.
 2. Environment Variables (Production dan Preview):
-   - `NEXT_PUBLIC_BASE_API_URL` = `https://meja-bersih-api.onrender.com`
+   - `NEXT_PUBLIC_BASE_API_URL` = URL proyek API (mis. `https://meja-bersih-api.vercel.app`, atau `https://meja-bersih-api.onrender.com` bila memakai Render)
    - `NEXT_PUBLIC_API_MODE` = `backend`
    - opsional `NEXT_PUBLIC_SITE_URL` = domain produksi
-3. Deploy. Pastikan domain Vercel sudah masuk `ALLOWED_ORIGINS` di Render,
+3. Deploy. Pastikan domain web sudah masuk `ALLOWED_ORIGINS` di proyek API,
    lalu uji `/` dengan foto contoh.
 
 ## Privasi

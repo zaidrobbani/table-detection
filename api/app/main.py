@@ -9,7 +9,7 @@ from starlette.formparsers import MultiPartParser
 from app.core.config import get_settings
 from app.core.errors import pasang_handler
 from app.routers import health, prediksi
-from app.services.model_registry import muat_registry, warmup
+from app.services.model_registry import dapatkan_registry
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("meja-bersih")
@@ -17,22 +17,19 @@ log = logging.getLogger("meja-bersih")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings = get_settings()
+    # Dijalankan oleh uvicorn (lokal/Render/HF). Di serverless lifespan bisa saja
+    # tidak berjalan; router memuat model secara lazy lewat dapatkan_registry().
     app.state.registry = None
-    reg = await run_in_threadpool(muat_registry, settings)
-    app.state.registry = reg
-    await run_in_threadpool(warmup, reg)
-    log.info("Model siap (warm).")
+    await run_in_threadpool(dapatkan_registry, app)
     yield
     app.state.registry = None
 
 
-def create_app() -> FastAPI:
+def _rakit(app: FastAPI) -> FastAPI:
     settings = get_settings()
     # Privasi: Starlette menumpahkan unggahan > 1 MB ke berkas sementara di disk.
     # Naikkan ambang spool di atas batas upload agar foto tetap di memori.
     MultiPartParser.spool_max_size = settings.max_upload_bytes + 1024 * 1024
-    app = FastAPI(title="Meja Bersih API", version="1.0.0", lifespan=lifespan)
     app.state.registry = None
     app.add_middleware(
         CORSMiddleware,
@@ -47,4 +44,11 @@ def create_app() -> FastAPI:
     return app
 
 
-app = create_app()
+def create_app() -> FastAPI:
+    """Pabrik instance baru (dipakai tes)."""
+    return _rakit(FastAPI(title="Meja Bersih API", version="1.0.0", lifespan=lifespan))
+
+
+# Literal `app = FastAPI(...)` agar terdeteksi sebagai entrypoint oleh Vercel.
+app = FastAPI(title="Meja Bersih API", version="1.0.0", lifespan=lifespan)
+_rakit(app)

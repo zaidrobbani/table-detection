@@ -3,6 +3,14 @@ import { z } from "zod";
 export const MAX_UPLOAD_MB = 10;
 export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 
+/**
+ * Batas ukuran berkas yang benar-benar dikirim ke API. Vercel Functions
+ * menolak body di atas 4,5 MB (413), jadi foto yang lebih besar diperkecil
+ * dulu di browser (lihat siapkanUnggahan di shared/util/image.ts).
+ */
+export const MAX_KIRIM_MB = 4;
+export const MAX_KIRIM_BYTES = MAX_KIRIM_MB * 1024 * 1024;
+
 export const TIPE_GAMBAR_DIDUKUNG = [
   "image/jpeg",
   "image/png",

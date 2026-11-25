@@ -1,6 +1,7 @@
-# Runtime (Render/Docker). Tanpa TensorFlow: inferensi lewat ONNX Runtime.
+# Runtime (Vercel Python Function, Render, Docker). Tanpa TensorFlow: inferensi lewat ONNX Runtime.
+# uvicorn polos (tanpa extra [standard]) menghemat ~25 MB bundel Vercel; cukup untuk Render/lokal.
 fastapi>=0.165,<1
-uvicorn[standard]>=0.54,<1
+uvicorn>=0.54,<1
 python-multipart>=0.0.34,<1
 opencv-python-headless>=4.14,<5
 pillow>=13,<14

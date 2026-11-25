@@ -1,5 +1,5 @@
 <!-- Catatan: header YAML di bawah hanya untuk Hugging Face Space. Space bertipe Docker butuh akun PRO,
-     jadi hosting dipindah ke Render (lihat bagian Deploy ke Render). Header dibiarkan bila nanti dipakai lagi. -->
+     jadi hosting utama memakai proyek Vercel kedua (lihat bagian Deploy ke Vercel). Header dibiarkan bila nanti dipakai lagi. -->
 ---
 title: Meja Bersih API
 emoji: 🧹
@@ -24,7 +24,7 @@ Proyek kelompok Pengolahan Citra Digital + Visi Komputer, FILKOM UB 2026.
 
 | Metode | Path | Keterangan |
 | --- | --- | --- |
-| GET | `/health` | `{status, models, tensorflow, runtime, warm}`. `tensorflow` = versi TF saat training ("2.21.0", kontrak web), `runtime` = mis. `onnxruntime 1.32.0`. `warm=true` setelah warmup selesai. |
+| GET | `/health` | `{status, models, tensorflow, runtime, warm}`. Memuat model bila belum (lazy), jadi panggilan pertama pada instance dingin lambat dan polling dari web ikut menghangatkan instance. `tensorflow` = versi TF saat training ("2.21.0", kontrak web), `runtime` = mis. `onnxruntime 1.32.0`. `warm=true` setelah warmup selesai. |
 | POST | `/predict` | multipart `file` + `model` (`C` default atau `B`). |
 | POST | `/compare` | multipart `file`. Mengembalikan `{B, C, sepakat}`. |
 
@@ -79,7 +79,38 @@ ke `models/model_{B,C}_head.npz` (`w`, `b`), lalu memvalidasi selisih feature ma
 terhadap Keras (harus < 1e-4). GAP, Dense, sigmoid, dan Grad-CAM dihitung dengan numpy di
 `app/services/gradcam.py`.
 
-## Deploy ke Render
+## Deploy ke Vercel (proyek kedua, utama)
+
+API dijalankan sebagai Vercel Python Function (ASGI) dari folder `api/`. Tanpa `vercel.json` dan tanpa
+`builds`: Vercel mendeteksi FastAPI dari `requirements.txt` dan memuat `app` dari entrypoint
+(`index.py`, mengekspor ulang `app.main:app`; `app/main.py` juga dikenali).
+Sumber: [FastAPI di Vercel](https://vercel.com/docs/frameworks/backend/fastapi) dan
+[Python runtime](https://vercel.com/docs/functions/runtimes/python).
+
+1. Vercel > Add New > Project > pilih repo yang sama dengan web. Set **Root Directory** = `api`,
+   Framework Preset = FastAPI (terdeteksi otomatis). Ini proyek terpisah dari proyek web.
+2. Environment Variables (Production dan Preview):
+   - `ALLOWED_ORIGINS` = `https://meja-bersih-pcd.vercel.app,http://localhost:3000` (domain proyek web)
+   - `ALLOWED_ORIGIN_REGEX` = `https://meja-bersih-[a-z0-9-]+-zaidrobbanis-projects\.vercel\.app` (preview web)
+3. Deploy, lalu buka `https://<proyek-api>.vercel.app/health`. Panggilan pertama memuat model (beberapa detik).
+4. Di proyek web, isi `NEXT_PUBLIC_BASE_API_URL` = URL proyek API (tanpa garis miring di akhir), lalu redeploy web.
+
+Catatan serverless:
+
+- Python 3.12 (`.python-version`; versi default Vercel) dan semua dependensi punya wheel manylinux cp312.
+  Batas bundel Vercel 500 MB tanpa kompresi; bundel ini sekitar 365 MB terpasang (347 MB site-packages tanpa extra `uvicorn[standard]`, ditambah sekitar 17 MB model).
+- Lifespan FastAPI didukung Vercel, tetapi model tetap dimuat lazy lewat `dapatkan_registry()` (thread-safe,
+  sekali per instance) di `/health`, `/predict`, dan `/compare`, sehingga aman bila lifespan tidak jalan.
+  Start dingin = muat 2 model ONNX + warmup. Instance yang sama dipakai ulang selama masih hangat.
+- Batas body request Vercel Functions adalah 4,5 MB (respons 413 dari platform, bukan dari API ini, dan
+  tidak berbentuk JSON). Karena itu web memperkecil foto > 4 MB di browser sebelum mengirim.
+  `MAX_UPLOAD_MB=10` tetap berlaku untuk API lokal/Render.
+- Rate limit (`RATE_LIMIT`) disimpan di memori per instance, jadi di Vercel hanya berlaku per instance
+  (bukan global). Cukup untuk demo; pakai Vercel Firewall bila perlu pembatasan nyata.
+- `.vercelignore` mengecualikan `.venv`, `tests`, `scripts`, `*.keras`, `Dockerfile`; `models/*.onnx`,
+  `*.npz`, dan `preprocessing_config.json` ikut terbawa.
+
+## Deploy ke Render (alternatif)
 
 Dari root repo, `render.yaml` adalah Blueprint (service `meja-bersih-api`, plan free, rootDir `api`,
 build `pip install -r requirements.txt`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`,
@@ -95,7 +126,7 @@ health check `/health`).
 mendapat berkas aslinya; `*.keras` tetap LFS dan tidak dibutuhkan runtime. Service free tidur setelah
 15 menit tanpa trafik; start dingin 30 sampai 60 detik, cek `warm` di `/health`.
 
-## Hugging Face Space (tidak dipakai)
+## Hugging Face Space (alternatif, butuh PRO)
 
 Space bertipe Docker butuh akun PRO. Bila tetap ingin memakainya, `Dockerfile` di folder ini sudah
 sesuai (`PORT=7860`, hanya `requirements.txt`), dan header YAML di atas tetap berlaku.
