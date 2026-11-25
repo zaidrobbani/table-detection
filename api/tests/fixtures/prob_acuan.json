@@ -1,0 +1,8 @@
+{
+  "_sumber": "web_assets/data/B/predictions_testing.csv (prob_kotor model B). Prediksi model C per citra belum ada di web_assets.zip.",
+  "B": {
+    "F_028_B_A_Crop.jpg": 0.17557994,
+    "F_041_K_D_Crop.jpg": 0.9504066
+  },
+  "C": {}
+}

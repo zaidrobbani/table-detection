@@ -1,0 +1,20 @@
+# Dependensi & build
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Env lokal (contoh .env.example tetap di-commit)
+.env
+.env.local
+.env.*.local
+
+# Lain-lain
+.DS_Store
+.vercel/

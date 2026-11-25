@@ -1,0 +1,16 @@
+{
+    "version": "progress2_v1",
+    "pipeline_version": "p0_p1_v1",
+    "output_size": 224,
+    "padding_rgb": [
+        114,
+        114,
+        114
+    ],
+    "clahe_clip_limit": 2.0,
+    "clahe_tile_grid": [
+        8,
+        8
+    ],
+    "format": "PNG"
+}

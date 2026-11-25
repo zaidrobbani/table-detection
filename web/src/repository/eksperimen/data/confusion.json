@@ -1,0 +1,74 @@
+{
+  "labels": [
+    "Bersih",
+    "Kotor"
+  ],
+  "Testing": {
+    "B": {
+      "model": "B",
+      "split": "Testing",
+      "n": 54,
+      "matrix": [
+        [
+          18,
+          8
+        ],
+        [
+          2,
+          26
+        ]
+      ],
+      "total_per_kelas": [
+        26,
+        28
+      ],
+      "turunan": false,
+      "sumber": "Dihitung dari scripts/source/B/predictions_testing.csv (satu baris per citra, ambang 0,5)."
+    },
+    "C": {
+      "model": "C",
+      "split": "Testing",
+      "n": 54,
+      "matrix": [
+        [
+          20,
+          6
+        ],
+        [
+          1,
+          27
+        ]
+      ],
+      "total_per_kelas": [
+        26,
+        28
+      ],
+      "turunan": true,
+      "sumber": "Diturunkan dari recall per kelas di scripts/source/C/metrics.json (Bersih benar = round(recall_bersih x 26) = 20, Kotor benar = round(recall_kotor x 28) = 27). Prediksi per citra C belum tersedia. Hasil dicek silang dengan akurasi dan presisi per kelas."
+    }
+  },
+  "Validation": {
+    "B": {
+      "model": "B",
+      "split": "Validation",
+      "n": 52,
+      "matrix": [
+        [
+          24,
+          2
+        ],
+        [
+          9,
+          17
+        ]
+      ],
+      "total_per_kelas": [
+        26,
+        26
+      ],
+      "turunan": false,
+      "sumber": "Dihitung dari scripts/source/B/predictions_validation.csv (satu baris per citra, ambang 0,5)."
+    },
+    "C": null
+  }
+}

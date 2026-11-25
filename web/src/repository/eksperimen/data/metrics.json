@@ -1,0 +1,67 @@
+{
+  "sumber": [
+    "scripts/source/B/metrics_testing.csv",
+    "scripts/source/B/metrics_validation.csv",
+    "scripts/source/C/metrics.json"
+  ],
+  "catatan": [
+    "Validation B hanya memiliki metrik macro (tanpa per kelas dan ROC AUC) di berkas sumber.",
+    "Metrik Validation C belum tersedia di web_assets. Jalankan ulang Rapikan_Folder_DL.ipynb."
+  ],
+  "Testing": {
+    "B": {
+      "model": "B",
+      "variant": "P0",
+      "split": "Testing",
+      "n_samples": 54,
+      "accuracy": 0.8148148148148148,
+      "precision_macro": 0.8323529411764705,
+      "recall_macro": 0.8104395604395604,
+      "f1_macro": 0.8106591865357644,
+      "precision_bersih": 0.9,
+      "recall_bersih": 0.6923076923076923,
+      "f1_bersih": 0.782608695652174,
+      "precision_kotor": 0.7647058823529411,
+      "recall_kotor": 0.9285714285714286,
+      "f1_kotor": 0.8387096774193549,
+      "roc_auc": 0.9052197802197802
+    },
+    "C": {
+      "model": "C",
+      "variant": "P1",
+      "split": "Testing",
+      "n_samples": 54,
+      "accuracy": 0.8703703703703703,
+      "precision_macro": 0.8852813852813852,
+      "recall_macro": 0.8667582417582418,
+      "f1_macro": 0.8681548657132891,
+      "precision_bersih": 0.9523809523809523,
+      "recall_bersih": 0.7692307692307693,
+      "f1_bersih": 0.851063829787234,
+      "precision_kotor": 0.8181818181818182,
+      "recall_kotor": 0.9642857142857143,
+      "f1_kotor": 0.8852459016393442,
+      "roc_auc": 0.923076923076923
+    }
+  },
+  "Validation": {
+    "B": {
+      "model": "B",
+      "variant": "P0",
+      "split": "Validation",
+      "n_samples": 52,
+      "accuracy": 0.7884615384615384,
+      "precision_macro": 0.8110047846889952,
+      "recall_macro": 0.7884615384615385,
+      "f1_macro": 0.784557438794727,
+      "precision_bersih": null,
+      "recall_bersih": null,
+      "f1_bersih": null,
+      "precision_kotor": null,
+      "recall_kotor": null,
+      "f1_kotor": null,
+      "roc_auc": null
+    },
+    "C": null
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "tersedia": [
+    {
+      "id": "cm-b-testing",
+      "judul": "Confusion matrix B, Testing",
+      "caption": "Confusion matrix model B (tanpa PCD, P0) pada 54 citra Testing.",
+      "src": "/figures/B/confusion_matrix_testing.png",
+      "kelompok": "confusion",
+      "model": "B"
+    },
+    {
+      "id": "cm-b-validation",
+      "judul": "Confusion matrix B, Validation",
+      "caption": "Confusion matrix model B (tanpa PCD, P0) pada 52 citra Validation.",
+      "src": "/figures/B/confusion_matrix_validation.png",
+      "kelompok": "confusion",
+      "model": "B"
+    },
+    {
+      "id": "kurva-b-15",
+      "judul": "Kurva training B, tahap 1",
+      "caption": "Loss dan akurasi model B selama 15 epoch tahap 1 (backbone beku).",
+      "src": "/figures/B/training_curve.png",
+      "kelompok": "training",
+      "model": "B"
+    },
+    {
+      "id": "kurva-b-25",
+      "judul": "Kurva training B, 25 epoch",
+      "caption": "Loss dan akurasi model B selama 25 epoch; tahap 2 dimulai pada epoch 16.",
+      "src": "/figures/B/training_curve_25epoch.png",
+      "kelompok": "training",
+      "model": "B"
+    }
+  ],
+  "belum_ada": [
+    {
+      "id": "gradcam-b-vs-c",
+      "judul": "Grad-CAM B vs C",
+      "kelompok": "gradcam",
+      "nama_file": "gradcam_B_vs_C.png"
+    },
+    {
+      "id": "gradcam-kesalahan-c",
+      "judul": "Grad-CAM kesalahan model C",
+      "kelompok": "gradcam",
+      "nama_file": "gradcam_kesalahan_C.png"
+    },
+    {
+      "id": "visual-p0-p1",
+      "judul": "Visual P0 vs P1",
+      "kelompok": "clahe",
+      "nama_file": "visual_p0_vs_p1.png"
+    }
+  ]
+}

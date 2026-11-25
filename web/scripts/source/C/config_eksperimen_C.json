@@ -1,0 +1,43 @@
+{
+  "eksperimen": "C",
+  "variant": "P1_CLAHE",
+  "model": "MobileNetV2 (ImageNet, backbone beku)",
+  "manifest": "03_hasil_eksperimen/PCD/03_batch_preprocessing/progress2_v1/preprocessing_manifest_gabungan.csv",
+  "kolom_input": "p1_rel",
+  "pcd_config": {
+    "version": "progress2_v1",
+    "pipeline_version": "p0_p1_v1",
+    "output_size": 224,
+    "padding_rgb": [
+      114,
+      114,
+      114
+    ],
+    "clahe_clip_limit": 2.0,
+    "clahe_tile_grid": [
+      8,
+      8
+    ],
+    "format": "PNG"
+  },
+  "seed": 42,
+  "img_size": 224,
+  "batch_size": 16,
+  "learning_rate": 0.0001,
+  "dropout": 0.2,
+  "epochs_stage1": 15,
+  "epochs_total": 25,
+  "patience": 4,
+  "threshold": 0.5,
+  "class_weight": {
+    "Bersih": 0.8429951690821256,
+    "Kotor": 1.2288732394366197
+  },
+  "label_map": {
+    "Bersih": 0,
+    "Kotor": 1
+  },
+  "tensorflow": "2.21.0",
+  "model_file": "model_P1_25epoch.keras",
+  "pembanding": "03_hasil_eksperimen/DL/MobileNetV2_P0/model_P0_25epoch.keras"
+}

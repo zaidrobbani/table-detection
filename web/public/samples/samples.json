@@ -1,0 +1,26 @@
+[
+  {
+    "file": "F_032_B_A_Crop.jpg",
+    "label": "Bersih"
+  },
+  {
+    "file": "Z_068_B_A_Crop.jpg",
+    "label": "Bersih"
+  },
+  {
+    "file": "F_028_B_A_Crop.jpg",
+    "label": "Bersih"
+  },
+  {
+    "file": "F_047_K_D_Crop.jpg",
+    "label": "Kotor"
+  },
+  {
+    "file": "F_043_K_A_Crop.jpg",
+    "label": "Kotor"
+  },
+  {
+    "file": "F_041_K_D_Crop.jpg",
+    "label": "Kotor"
+  }
+]

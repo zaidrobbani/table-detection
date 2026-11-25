@@ -1,0 +1,42 @@
+# Git hooks monorepo web_detect_pcd (git root = folder ini, aplikasi FE di web/).
+# Semua perintah dijalankan dari web/ lewat `root: web/`.
+#
+# pre-commit : biome check (tanpa menulis) pada berkas web yang di-stage + typecheck
+# commit-msg : commitlint (conventional commits)
+# pre-push   : lint + typecheck + build, sama seperti pipeline DesaNyala
+#
+# Gagal format? Jalankan `bun run check` di web/, lalu `git add` ulang.
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome-check
+      root: web/
+      glob: "*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+
+    - name: typecheck
+      root: web/
+      glob: "*.{ts,tsx}"
+      run: bun run typecheck
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      root: web/
+      run: bunx commitlint --edit {1}
+
+pre-push:
+  piped: true
+  jobs:
+    - name: lint
+      root: web/
+      run: bun run lint
+
+    - name: typecheck
+      root: web/
+      run: bun run typecheck
+
+    - name: build
+      root: web/
+      run: bun run build

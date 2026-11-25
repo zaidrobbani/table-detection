@@ -1,0 +1,2 @@
+eksperimen,model,variant,split,n_samples,accuracy,precision_macro,recall_macro,f1_macro
+B,MobileNetV2,P0,Validation,52,0.7884615384615384,0.8110047846889952,0.7884615384615385,0.784557438794727

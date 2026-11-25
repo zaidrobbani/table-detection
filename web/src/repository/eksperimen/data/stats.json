@@ -1,0 +1,14 @@
+{
+  "split": "Testing",
+  "n": 54,
+  "n11": 43,
+  "n10_B_benar_C_salah": 1,
+  "n01_B_salah_C_benar": 4,
+  "n00": 6,
+  "p_mcnemar": 0.375,
+  "delta_f1_macro": 0.05749567917752474,
+  "ci95_low": -0.019969040247677983,
+  "ci95_high": 0.14819370500189463,
+  "sumber": "scripts/source/C/metrics.json (uji_statistik)",
+  "tambahan": null
+}
