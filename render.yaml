@@ -1,0 +1,21 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: meja-bersih-api
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: ALLOWED_ORIGINS
+        value: https://meja-bersih-pcd.vercel.app,https://meja-bersih-zaidrobbanis-projects.vercel.app,http://localhost:3000
+      # Deployment preview Vercel: meja-bersih-<hash>-zaidrobbanis-projects.vercel.app
+      - key: ALLOWED_ORIGIN_REGEX
+        value: https://meja-bersih-[a-z0-9-]+-zaidrobbanis-projects\.vercel\.app
+      - key: RATE_LIMIT
+        value: "30"

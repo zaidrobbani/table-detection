@@ -19,6 +19,7 @@ def test_health(client):
     j = r.json()
     assert j["status"] == "ok" and j["models"] == ["B", "C"] and j["warm"] is True
     assert j["tensorflow"] == "2.21.0"
+    assert j["runtime"].startswith("onnxruntime ")
 
 
 def test_predict_teks_ditolak_400(client):

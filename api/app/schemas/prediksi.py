@@ -28,5 +28,6 @@ class CompareResult(BaseModel):
 class HealthResult(BaseModel):
     status: str
     models: list[str]
-    tensorflow: str
+    tensorflow: str  # versi TF saat training (kontrak web)
+    runtime: str
     warm: bool

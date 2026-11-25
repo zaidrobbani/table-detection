@@ -15,8 +15,9 @@ Dua model MobileNetV2 (backbone beku) dibandingkan dengan protokol yang sama:
 ## Isi monorepo
 
 ```
-api/   FastAPI + TensorFlow (Hugging Face Space, Docker, port 7860)
+api/   FastAPI + ONNX Runtime (Render free tier; lokal port 7860)
 web/   Next.js 16 App Router + Tailwind v4 + bun (Vercel, Root Directory = web)
+render.yaml Blueprint Render untuk api/
 dev.sh menjalankan api + web sekaligus untuk pengembangan lokal
 ```
 
@@ -33,8 +34,8 @@ Halaman web:
 
 - [bun](https://bun.sh) 1.4 atau lebih baru (untuk `web/`).
 - [uv](https://docs.astral.sh/uv/) dan **Python 3.11** (untuk `api/`).
-  TensorFlow 2.21 belum mendukung Python terbaru, jadi pakai 3.11; uv bisa
-  mengunduhnya sendiri.
+  TensorFlow 2.21 (hanya untuk dev/ekspor ONNX) belum mendukung Python terbaru,
+  jadi pakai 3.11; uv bisa mengunduhnya sendiri.
 - Sekitar 2 GB ruang disk untuk venv TensorFlow.
 
 ## Menjalankan lokal
@@ -134,27 +135,27 @@ nama berkas.
 
 ## Deploy
 
-### API ke Hugging Face Space
+### API ke Render (free tier)
 
-1. Buat Space baru: SDK **Docker**, template Blank, hardware CPU basic.
-2. Clone repo Space, lalu salin **isi** folder `api/` ke root repo Space
-   (`app/`, `models/`, `Dockerfile`, `requirements.txt`, `README.md`, `.dockerignore`).
-   `README.md` sudah berisi header YAML HF (`sdk: docker`, `app_port: 7860`).
-3. Simpan model lewat Git LFS:
-   ```bash
-   git lfs install
-   git lfs track "*.keras"
-   git add .gitattributes models/ app/ Dockerfile requirements.txt README.md .dockerignore
-   git commit -m "deploy api" && git push
-   ```
-4. Di Settings > Variables and secrets, isi `ALLOWED_ORIGINS` dengan domain
-   Vercel (mis. `https://meja-bersih.vercel.app`). Untuk preview deployment
-   Vercel, tambahkan `ALLOWED_ORIGIN_REGEX`, mis. `https://meja-bersih-.*\.vercel\.app`.
-5. Tunggu build selesai, lalu cek `https://<user>-<space>.hf.space/health`
+API berjalan di ONNX Runtime (tanpa TensorFlow) supaya muat di RAM 512 MB.
+Hugging Face Space dengan Docker ternyata butuh akun PRO, jadi hosting memakai Render.
+
+1. Di Render: New > **Blueprint**, pilih repo GitHub ini. `render.yaml` di root
+   membuat service `meja-bersih-api` (Python 3.11, plan free, region Singapore,
+   `rootDir: api`).
+2. Saat diminta, isi `ALLOWED_ORIGINS` dengan domain Vercel
+   (mis. `https://meja-bersih.vercel.app`). Untuk preview deployment Vercel isi
+   `ALLOWED_ORIGIN_REGEX`, mis. `https://meja-bersih-.*\.vercel\.app`.
+3. Tunggu build selesai, lalu cek `https://meja-bersih-api.onrender.com/health`
    sampai `warm` bernilai `true`.
 
-Space gratis tidur bila tidak dipakai. Start dingin biasanya 30 sampai 60 detik;
-web menampilkan banner selama itu dan memakai timeout 60 detik per permintaan.
+Berkas `models/*.onnx` (sekitar 9 MB masing-masing) dan `*_head.npz` disimpan
+sebagai berkas git biasa, bukan Git LFS, agar build Render pasti mendapat berkas
+aslinya. Berkas `*.keras` tetap lewat LFS dan tidak dipakai saat runtime.
+
+Service free tidur setelah 15 menit tanpa trafik; start dingin sekitar 30 sampai 60
+detik. Web menampilkan banner selama itu dan memakai timeout 60 detik per permintaan.
+Cek `warm` di `/health`. Detail ekspor ulang ONNX ada di `api/README.md`.
 
 ### Web ke Vercel
 
@@ -162,10 +163,10 @@ web menampilkan banner selama itu dan memakai timeout 60 detik per permintaan.
    Framework terdeteksi Next.js; `web/vercel.json` memakai
    `bun install --ignore-scripts` sebagai install command.
 2. Environment Variables (Production dan Preview):
-   - `NEXT_PUBLIC_BASE_API_URL` = `https://<user>-<space>.hf.space`
+   - `NEXT_PUBLIC_BASE_API_URL` = `https://meja-bersih-api.onrender.com`
    - `NEXT_PUBLIC_API_MODE` = `backend`
    - opsional `NEXT_PUBLIC_SITE_URL` = domain produksi
-3. Deploy. Pastikan domain Vercel sudah masuk `ALLOWED_ORIGINS` di Space,
+3. Deploy. Pastikan domain Vercel sudah masuk `ALLOWED_ORIGINS` di Render,
    lalu uji `/` dengan foto contoh.
 
 ## Privasi

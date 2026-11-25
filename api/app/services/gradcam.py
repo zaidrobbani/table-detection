@@ -1,32 +1,34 @@
-"""Grad-CAM dari bobot Dense terakhir (setara matematis dengan gradien pada GAP + Dense)."""
+"""Grad-CAM dari bobot Dense terakhir (setara matematis dengan gradien pada GAP + Dense).
+
+Versi numpy untuk runtime ONNX (tanpa TensorFlow). Setara dengan kode TF di spec:
+
+    fmap  = backbone(rescale(x))[0]                      # 7x7x1280
+    logit = tf.tensordot(reduce_mean(fmap, (0, 1)), w, 1) + b
+    prob  = sigmoid(logit)                               # P(Kotor)
+    tanda = 1 jika prob >= 0.5 selain itu -1
+    cam   = relu(tanda * tensordot(fmap, w, 1)); cam /= (cam.max() + 1e-8)
+
+dengan fmap dari graf ONNX (Rescaling + backbone) dan w, b dari head Dense.
+"""
 
 import base64
 import io
 
 import cv2
-import keras
 import numpy as np
-import tensorflow as tf
 from PIL import Image
 
 
-def cari_bagian(model):
-    rescale = next(l for l in model.layers if isinstance(l, keras.layers.Rescaling))
-    backbone = next(l for l in model.layers if isinstance(l, keras.Model))
-    dense = model.layers[-1]
-    return rescale, backbone, dense
-
-
 def prediksi_dan_cam(model, x_uint8):
-    rescale, backbone, dense = cari_bagian(model)
-    w = tf.cast(dense.kernel[:, 0], tf.float32)
-    fmap = backbone(rescale(x_uint8[None].astype("float32")), training=False)[0]  # 7x7x1280
-    logit = tf.tensordot(tf.reduce_mean(fmap, axis=(0, 1)), w, 1) + dense.bias[0]
-    prob = float(tf.sigmoid(logit))  # P(Kotor)
+    """model: ModelOnnx (app.services.model_registry). x_uint8: [224,224,3] uint8."""
+    w = model.w
+    fmap = model.fmap(x_uint8)  # 7x7x1280
+    logit = float(fmap.mean(axis=(0, 1)) @ w) + model.b
+    prob = float(1.0 / (1.0 + np.exp(-logit)))  # P(Kotor)
     tanda = 1.0 if prob >= 0.5 else -1.0
-    cam = tf.nn.relu(tanda * tf.tensordot(fmap, w, 1)).numpy()
+    cam = np.maximum(tanda * (fmap @ w), 0.0)
     cam = cam / (cam.max() + 1e-8)
-    cam = cv2.resize(cam, (224, 224), interpolation=cv2.INTER_LINEAR)
+    cam = cv2.resize(cam.astype(np.float32), (224, 224), interpolation=cv2.INTER_LINEAR)
     return prob, cam
 
 

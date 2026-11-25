@@ -18,6 +18,7 @@ class Settings:
     max_upload_mb: int = 10
     rate_limit: int = 30  # permintaan per menit per IP
     models_dir: Path = RAIZ / "models"
+    ort_threads: int = 1  # thread intra-op ONNX Runtime (hemat RAM/CPU)
 
     @property
     def max_upload_bytes(self) -> int:
@@ -31,4 +32,5 @@ def get_settings() -> Settings:
         max_upload_mb=int(os.getenv("MAX_UPLOAD_MB", "10")),
         rate_limit=int(os.getenv("RATE_LIMIT", "30")),
         models_dir=Path(os.getenv("MODELS_DIR", str(RAIZ / "models"))),
+        ort_threads=max(1, int(os.getenv("ORT_THREADS", "1"))),
     )

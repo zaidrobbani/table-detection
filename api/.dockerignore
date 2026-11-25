@@ -8,3 +8,5 @@ __pycache__/
 tests/
 requirements-dev.txt
 README.md
+models/*.keras
+scripts/

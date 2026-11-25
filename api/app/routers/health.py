@@ -12,5 +12,6 @@ def health(request: Request):
         status="ok",
         models=list(reg.models.keys()) if reg else ["B", "C"],
         tensorflow=reg.tf_version if reg else "memuat",
+        runtime=reg.runtime if reg else "memuat",
         warm=bool(reg and reg.warm),
     )
